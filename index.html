@@ -4,26 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="page-title">极简优质 RSS 导航</title>
-    <!-- 引入 Tailwind CSS 提升颜值 -->
-    <script src="https://jsdelivr.net"></script>
-    <style>
-        .active-btn { @apply bg-blue-600 text-white!important; }
-    </style>
+    <!-- 替换为最成熟稳定的 Tailwind CSS v3 版本的 CDN，100% 恢复高颜值 -->
+    <script src="https://tailwindcss.com"></script>
+    <script>
+        // 配置 Tailwind 颜色扩展（兼容之前的样式）
+        tailwind.config = {
+            theme: {
+                extend: {
+                    boxShadow: { 'xs': '0 1px 2px 0 rgba(0, 0, 0, 0.05)' }
+                }
+            }
+        }
+    </script>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen pb-12">
 
     <!-- 顶部导航与语言切换 -->
-    <header class="bg-white shadow-xs sticky top-0 z-50">
+    <header class="bg-white shadow-sm sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
             <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
                 <span>🌐</span> <span id="nav-logo">Best RSS List</span>
             </h1>
             <div class="flex gap-4">
-                <!-- 导出 OPML 核心跨越功能 -->
                 <button onclick="exportOPML()" id="btn-export" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition cursor-pointer">
                     📥 导出 OPML
                 </button>
-                <!-- 语言切换按钮 -->
                 <button onclick="toggleLanguage()" id="btn-lang" class="border border-gray-300 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm font-medium transition cursor-pointer">
                     English
                 </button>
@@ -39,94 +44,120 @@
         </section>
 
         <!-- 分类过滤器 -->
-        <div class="flex flex-wrap gap-2 justify-center mb-8" id="filter-container">
-            <!-- 动态生成 -->
-        </div>
+        <div class="flex flex-wrap gap-2 justify-center mb-8" id="filter-container"></div>
 
-        <!-- RSS 列表网格（原项目是枯燥的表格，我们用现代卡片流） -->
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" id="rss-grid">
-            <!-- 动态生成 -->
-        </div>
+        <!-- RSS 列表网格 -->
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" id="rss-grid"></div>
     </main>
 
     <script>
         // 1. 多语言字典配置
         const i18n = {
             zh: {
-                title: "极简优质 RSS 导航",
-                logo: "精选 RSS 导航",
-                heading: "全球优质 RSS 源精选",
+                title: "极简优质 RSS 导航", logo: "精选 RSS 导航", heading: "全球优质 RSS 源精选",
                 sub: "聚合全球极具价值的订阅源，每日动态检测，支持一键导入阅读器。",
-                exportBtn: "📥 导出选中/全部",
-                langBtn: "English",
-                copied: "已复制到剪贴板！",
-                all: "全部",
-                tech: "💻 技术与开发",
-                blog: "💡 独立博客",
-                news: "📰 资讯周刊",
-                statusActive: "🟢 在线",
-                statusDead: "🔴 失效",
-                copyBtn: "复制链接"
+                exportBtn: "📥 导出选中/全部", langBtn: "English", copied: "已复制到剪贴板！", all: "全部",
+                tech: "💻 技术与开发", blog: "💡 独立博客", news: "📰 资讯周刊",
+                statusActive: "🟢 在线", statusDead: "🔴 失效", copyBtn: "复制链接"
             },
             en: {
-                title: "Premium RSS Directory",
-                logo: "Best RSS List",
-                heading: "Curated Premium RSS Feeds",
+                title: "Premium RSS Directory", logo: "Best RSS List", heading: "Curated Premium RSS Feeds",
                 sub: "Global high-value subscription feeds, daily health check, one-click export to your reader.",
-                exportBtn: "📥 Export OPML",
-                langBtn: "简体中文",
-                copied: "Copied to clipboard!",
-                all: "All",
-                tech: "💻 Tech & Dev",
-                blog: "💡 Blogs & Thoughts",
-                news: "📰 News & Weekly",
-                statusActive: "🟢 Active",
-                statusDead: "🔴 Dead",
-                copyBtn: "Copy Link"
+                exportBtn: "📥 Export OPML", langBtn: "简体中文", copied: "Copied to clipboard!", all: "All",
+                tech: "💻 Tech & Dev", blog: "💡 Blogs & Thoughts", news: "📰 News & Weekly",
+                statusActive: "🟢 Active", statusDead: "🔴 Dead", copyBtn: "Copy Link"
             }
         };
 
-        // 2. 模拟数据源（实际应用中可通过自动化脚本将 sources.json 转换为此变量）
-       // 2. 声明空数组，等待异步加载
+        // 2. 双重保险：内置兜底硬编码数据（当 fetch 失败或 404 时自动使用它，保证页面绝对不空白）
+        const backupData = [
+            { name: "阮一峰的网络日志", name_en: "Ruan Yi Feng's Blog", url: "https://ruanyifeng.com", category: "tech", status: "active" },
+            { name: "少数派", name_en: "sspai", url: "https://sspai.com", category: "news", status: "active" },
+            { name: "王垠的博客", name_en: "Yin Wang's Blog", url: "https://rsshub.app", category: "blog", status: "active" }
+        ];
+
         let rssData = [];
         let currentLang = 'zh';
         let currentCategory = 'all';
 
-        // 3. 语言切换逻辑
         function toggleLanguage() {
             currentLang = currentLang === 'zh' ? 'en' : 'zh';
             document.documentElement.lang = currentLang;
             renderUI();
         }
 
-        // 4. 渲染界面 (保持你之前的 renderUI 代码不变)
         function renderUI() {
-            // ... 这里是你之前 index.html 里的 renderUI 内部逻辑，无需修改 ...
+            const langData = i18n[currentLang];
+            document.title = langData.title;
+            document.getElementById('nav-logo').innerText = langData.logo;
+            document.getElementById('main-heading').innerText = langData.heading;
+            document.getElementById('main-sub').innerText = langData.sub;
+            document.getElementById('btn-export').innerText = langData.exportBtn;
+            document.getElementById('btn-lang').innerText = langData.langBtn;
+
+            const categories = ['all', 'tech', 'blog', 'news'];
+            const filterContainer = document.getElementById('filter-container');
+            filterContainer.innerHTML = categories.map(cat => `
+                <button onclick="filterCategory('${cat}')" class="px-4 py-2 rounded-full text-sm font-medium transition cursor-pointer ${currentCategory === cat ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}">
+                    ${langData[cat]}
+                </button>
+            `).join('');
+
+            const grid = document.getElementById('rss-grid');
+            const filteredData = currentCategory === 'all' ? rssData : rssData.filter(item => item.category === currentCategory);
+
+            grid.innerHTML = filteredData.map(item => `
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between hover:shadow-md transition">
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-gray-900 text-lg">${currentLang === 'zh' ? item.name : item.name_en}</h3>
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${item.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}">
+                                ${item.status === 'active' ? langData.statusActive : langData.statusDead}
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-400 font-mono break-all bg-gray-50 p-2 rounded-sm mt-3 border border-gray-100">${item.url}</p>
+                    </div>
+                    <div class="mt-6">
+                        <button onclick="copyToClipboard('${item.url}')" class="w-full text-center bg-gray-100 hover:bg-blue-50 hover:text-blue-600 text-gray-700 font-medium py-2 rounded-lg text-sm transition cursor-pointer">
+                            📋 ${langData.copyBtn}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        // 5. 分类筛选 (保持不变)
         function filterCategory(cat) { currentCategory = cat; renderUI(); }
-        // 6. 一键复制 (保持不变)
-        function copyToClipboard(text) { ... }
-        // 7. 导出 OPML (保持不变)
-        function exportOPML() { ... }
+        function copyToClipboard(text) { navigator.clipboard.writeText(text).then(() => alert(i18n[currentLang].copied)); }
 
-        // 修改初始化入口：先读取 JSON 文件，再渲染页面
+        function exportOPML() {
+            const filteredData = currentCategory === 'all' ? rssData : rssData.filter(item => item.category === currentCategory);
+            let opmlContent = `<?xml version="1.0" encoding="UTF-8"?>\n<opml version="1.0">\n  <head><title>Exported RSS Feeds</title></head>\n  <body>\n    <outline text="${currentCategory.toUpperCase()}" title="${currentCategory.toUpperCase()}">\n`;
+            filteredData.forEach(item => {
+                const name = currentLang === 'zh' ? item.name : item.name_en;
+                opmlContent += `      <outline text="${name}" title="${name}" type="rss" xmlUrl="${item.url}" htmlUrl="${item.url}"/>\n`;
+            });
+            opmlContent += `    </outline>\n  </body>\n</opml>`;
+            const blob = new Blob([opmlContent], { type: 'text/xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `rss_export_${currentCategory}.opml`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
+
+        // 修改后的异步初始化：如果读取文件失败，自动用 backupData 顶上
         async function init() {
             try {
-                // 自动读取同目录下的 data/sources.json
                 const response = await fetch('./data/sources.json');
+                if (!response.ok) throw new Error('Network response was not ok');
                 rssData = await response.json();
-                renderUI();
             } catch (error) {
-                console.error("加载 RSS 数据失败:", error);
+                console.warn("未能成功在线读取 sources.json，已自动启用本地备份数据层:", error);
+                rssData = backupData; // 启用兜底，页面绝对不会变白！
             }
+            renderUI();
         }
 
-        // 执行初始化
         init();
-        // 初始化加载
-        renderUI();
     </script>
 </body>
 </html>
