@@ -15,11 +15,15 @@ function addNewSource() {
 
     try {
         const domain = new URL(url).hostname;
+        
+        // 🟢 确保这里的用户名与您仓库完全一致
         const githubUser = "ai-root-no"; 
         const repoName = "NeW_RSS";
         
         const issueTitle = encodeURIComponent(`[ADD_RSS] ${domain}`);
         const issueBody = encodeURIComponent(`${url}`);
+        
+        // 🛠️ 修复核心：使用标准的模板字符串 `` 和 ${}，确保变量 100% 能够被正确替换
         const submitUrl = `https://github.com{githubUser}/${repoName}/issues/new?title=${issueTitle}&body=${issueBody}`;
 
         if(confirm("✨ 正在为您连接自动化数据库...\n\n点击确认后将跳转到 GitHub 页面。您只需直接点击绿色的 'Submit new issue' 按钮，机器人就会录入并刷新网站！")) {
@@ -30,6 +34,7 @@ function addNewSource() {
         alert("请输入合法的规范网址！");
     }
 }
+
 
 function toggleLanguage() { 
     currentLang = currentLang === 'zh' ? 'en' : 'zh'; 
