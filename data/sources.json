@@ -26,5 +26,12 @@
     "url": "https://sspai.com/feed",
     "category": "tech",
     "status": "active"
+  },
+  {
+    "name": "HelloGitHub æå",
+    "name_en": "hellogithub.com",
+    "url": "https://hellogithub.com/rss",
+    "category": "tech",
+    "status": "active"
   }
 ]
