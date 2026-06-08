@@ -3,56 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="page-title">极简优质 RSS 导航</title>
-    <script src="https://tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { flatBg: '#f4f6f8', flatCard: '#ffffff', flatBorder: '#e2e8f0' }
-                }
-            }
-        }
-    </script>
-</head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen antialiased">
+    <title id="page-title">Premium RSS Directory</title>
+    <style>
+        /* === 纯扁平化极简高级感 CSS 样式（不依赖任何海外 CDN，100% 完美加载） === */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: #f8fafc; color: #1e293b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        /* 顶栏 */
+        header { background: #ffffff; border-b: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-w: 1200px; margin: 0 auto; padding: 12px 20px; display: flex; justify-content: space-between; items-center; }
+        .logo { font-size: 18px; font-weight: 800; color: #0f172a; display: flex; items-center: center; gap: 8px; }
+        .lang-btn { border: 1px solid #cbd5e1; background: #ffffff; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .lang-btn:hover { background: #f1f5f9; }
 
-    <header class="bg-white border-b border-flatBorder sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-            <h1 class="text-lg font-bold text-slate-900 flex items-center gap-2 tracking-wide">
-                <span>🌐</span> <span id="nav-logo">精选 RSS 导航</span>
-            </h1>
-            <button onclick="toggleLanguage()" id="btn-lang" class="border border-slate-300 hover:bg-slate-100 px-3 py-1 rounded text-xs font-semibold uppercase tracking-wider transition cursor-pointer">English</button>
+        /* 布局主体 */
+        main { max-w: 1200px; width: 100%; margin: 0 auto; padding: 24px 20px; display: grid; grid-template-columns: 1fr; gap: 24px; flex: 1; }
+        
+        @media (min-width: 1024px) {
+            main { grid-template-columns: 360px 1fr; height: calc(100vh - 70px); overflow: hidden; }
+            .sidebar { height: 100%; overflow-y: auto; padding-right: 8px; }
+            .content-area { height: 100%; overflow-y: auto; }
+        }
+
+        /* 扁平化区块组件 */
+        .flat-box { background: #ffffff; border: 1px solid #e2e8f0; padding: 20px; margin-bottom: 16px; }
+        .flat-box h2 { font-size: 16px; font-weight: 900; color: #0f172a; margin-bottom: 8px; }
+        .flat-box p { font-size: 12px; color: #64748b; line-height: 1.6; }
+
+        /* 数据看板组件（完美看齐参考网站的核心精髓） */
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+        .stat-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; text-align: center; }
+        .stat-val { font-size: 20px; font-weight: 900; color: #2563eb; }
+        .stat-lbl { font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-top: 2px; }
+
+        /* 输入框组合 */
+        .input-group { display: flex; gap: 8px; margin-top: 4px; }
+        .flat-input { flex: 1; border: 1px solid #cbd5e1; padding: 8px 12px; font-size: 12px; background: #f8fafc; transition: all 0.2s; }
+        .flat-input:focus { outline: none; border-color: #2563eb; background: #ffffff; }
+        .flat-btn { background: #2563eb; color: #ffffff; border: none; padding: 8px 16px; font-size: 12px; font-weight: 700; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+        .flat-btn:hover { background: #1d4ed8; }
+        .flat-btn.success { background: #059669; }
+        .flat-btn.success:hover { background: #047857; }
+
+        /* 侧边单选栏按钮 */
+        .filter-list { display: flex; flex-direction: column; gap: 6px; }
+        .filter-item { width: 100%; text-align: left; padding: 8px 12px; font-size: 12px; font-weight: 600; border: 1px solid #e2e8f0; background: #f8fafc; color: #475569; cursor: pointer; display: flex; justify-content: space-between; }
+        .filter-item:hover { background: #f1f5f9; }
+        .filter-item.active { background: #0f172a; border-color: #0f172a; color: #ffffff; font-weight: 700; }
+
+        /* 右侧卡片流布局 */
+        .rss-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+        @media (min-width: 640px) { .rss-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        /* 扁平化数据卡片 */
+        .rss-card { background: #ffffff; border: 1px solid #e2e8f0; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; transition: border-color 0.2s; }
+        .rss-card:hover { border-color: #94a3b8; }
+        .card-header { display: flex; justify-content: space-between; items-start: flex-start; gap: 8px; }
+        .card-title { font-size: 14px; font-weight: 700; color: #0f172a; word-break: break-all; line-height: 1.4; }
+        .status-badge { font-size: 10px; font-weight: 800; padding: 2px 6px; text-transform: uppercase; }
+        .status-badge.active { background: #dcfce7; color: #15803d; }
+        .status-badge.dead { background: #fee2e2; color: #b91c1c; }
+        .card-url { font-size: 11px; font-family: monospace; color: #64748b; background: #f8fafc; padding: 6px; border: 1px solid #f1f5f9; word-break: break-all; margin-top: 8px; margin-bottom: 12px; user-select: all; }
+        .card-btn { width: 100%; background: #ffffff; border: 1px solid #e2e8f0; padding: 6px 0; font-size: 11px; font-weight: 700; color: #475569; cursor: pointer; transition: all 0.2s; }
+        .card-btn:hover { background: #0f172a; color: #ffffff; border-color: #0f172a; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <div class="logo">🌐 <span id="nav-logo">精选 RSS 导航</span></div>
+            <button onclick="toggleLanguage()" id="btn-lang" class="lang-btn">English</button>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:h-[calc(100vh-65px)] lg:overflow-hidden">
-        <!-- 左侧控制台 -->
-        <div class="lg:col-span-4 flex flex-col gap-5 lg:h-full lg:overflow-y-auto pr-0 lg:pr-2">
-            <div class="bg-white border border-flatBorder p-5">
-                <h2 id="main-heading" class="text-xl font-black text-slate-900 tracking-tight">全球优质 RSS 源精选</h2>
-                <p id="main-sub" class="mt-2 text-xs text-slate-500 leading-relaxed">聚合全球极具价值的订阅源，支持一键导入阅读器。</p>
+    <main>
+        <!-- 左侧固定看板区 -->
+        <div class="sidebar">
+            <div class="flat-box">
+                <h2 id="main-heading">全球优质 RSS 源精选</h2>
+                <p id="main-sub">聚合全球极具价值的订阅源，支持一键导入阅读器。</p>
+                
+                <!-- 实时数据看板（完美看齐参考项目） -->
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-val" id="stat-total">0</div>
+                        <div class="stat-lbl" id="lbl-total">总订阅源</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-val" id="stat-active" style="color: #059669;">0</div>
+                        <div class="stat-lbl" id="lbl-active">可用在线</div>
+                    </div>
+                </div>
             </div>
-            <div class="bg-white border border-flatBorder p-5 flex flex-col gap-3">
-                <input type="text" id="new-url-input" placeholder="贴入任何博客首页或 RSS 链接..." class="w-full border border-slate-200 px-3 py-2 text-xs bg-slate-50 focus:outline-none focus:border-blue-600 focus:bg-white transition">
-                <button onclick="addNewSource()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 text-xs font-bold transition tracking-wider cursor-pointer text-center uppercase">✨ 极速添加</button>
-                <p class="text-[10px] text-slate-400 text-center leading-normal">系统会自动建立 Issue 并触发 Actions 机器人为您深度嗅探格式</p>
+
+            <div class="flat-box">
+                <div class="input-group">
+                    <input type="text" id="new-url-input" placeholder="贴入任何博客首页或 RSS 链接..." class="flat-input">
+                    <button onclick="addNewSource()" class="flat-btn">极速添加</button>
+                </div>
+                <p style="font-size: 10px; color: #94a3b8; text-align: center; margin-top: 8px;">系统会自动建立 Issue 并触发机器人为您深度嗅探格式</p>
             </div>
-            <div class="bg-white border border-flatBorder p-5">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-3">分类筛选</span>
-                <div class="flex flex-col gap-1.5" id="filter-container"></div>
+
+            <div class="flat-box">
+                <div class="filter-list" id="filter-container"></div>
             </div>
-            <div class="bg-white border border-flatBorder p-5 mt-auto">
-                <button onclick="exportOPML()" id="btn-export" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 text-xs font-bold transition tracking-wider cursor-pointer text-center">📥 导出 OPML 订阅包</button>
+
+            <div class="flat-box" style="padding: 12px;">
+                <button onclick="exportOPML()" id="btn-export" class="flat-btn success" style="width: 100%; py: 10px;">📥 导出 OPML 订阅包</button>
             </div>
         </div>
-        <!-- 右侧卡片独立滚动区 -->
-        <div class="lg:col-span-8 lg:h-full lg:overflow-y-auto pb-12 lg:pb-6">
-            <div class="grid gap-4 grid-cols-1 sm:grid-cols-2" id="rss-grid"></div>
+
+        <!-- 右侧卡片独立滚动区（永不无限长拉伸） -->
+        <div class="content-area">
+            <div class="rss-grid" id="rss-grid"></div>
         </div>
     </main>
 
-    <!-- 💡 核心跨越：把所有复杂逻辑剥离到独立脚本文件中，防止 AI 截断 -->
+    <!-- 直接远程联接逻辑控制中心 -->
     <script src="./app.js"></script>
 </body>
 </html>
