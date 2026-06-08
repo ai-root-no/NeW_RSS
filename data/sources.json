@@ -1,0 +1,23 @@
+[
+  {
+    "name": "阮一峰的网络日志",
+    "name_en": "Ruan Yi Feng's Blog",
+    "url": "https://ruanyifeng.com",
+    "category": "tech",
+    "status": "dead"
+  },
+  {
+    "name": "少数派",
+    "name_en": "sspai",
+    "url": "https://sspai.com",
+    "category": "news",
+    "status": "active"
+  },
+  {
+    "name": "酷壳",
+    "name_en": "CoolShell",
+    "url": "http://coolshell.cn",
+    "category": "tech",
+    "status": "active"
+  }
+]
