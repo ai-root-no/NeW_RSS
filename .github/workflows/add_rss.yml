@@ -80,7 +80,7 @@ jobs:
         git add data/sources.json
         git diff-index --quiet HEAD || git commit -m "chore: 前台网页用户提交新源自动录入"
         git push
-        gh issue edit ${{ github.event.issue.number }} --state closed --add-label "auto-added"
+        gh issue edit '${{ github.event.issue.number }}' --state closed --add-label "auto-added"
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
