@@ -2,7 +2,8 @@ name: Auto Add RSS From Issue
 
 on:
       issue:
-    types: [opened] # 只要有人提交了 Issue，立刻触发
+          types: [opened] # 🟢 修复核心：issue前面有2个空格，types前面有4个空格！全是空格，不准用Tab！
+
 
 jobs:
   auto-add:
