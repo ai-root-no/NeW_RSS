@@ -1,14 +1,14 @@
 name: Auto Add RSS From Issue
 
 on:
-      issue:
-          types: [opened] # 🟢 修复核心：issue前面有2个空格，types前面有4个空格！全是空格，不准用Tab！
-
+  issues:
+    types: [opened] # 🟢 彻底修复：单数 issue 不支持定义 types，必须用复数 issues！
 
 jobs:
   auto-add:
-    if: startsWith(github.event.issue.title, '[ADD_RSS]') # 检查是不是从网页提交来的
+    if: "${{ startsWith(github.event.issue.title, '[ADD_RSS]') }}" # 🟢 双引号加语法糖包裹，彻底消除下方的波浪线
     runs-on: ubuntu-latest
+
     steps:
     - name: 签出代码
       uses: actions/checkout@v4
