@@ -11,142 +11,125 @@ HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
 
 os.makedirs('data', exist_ok=True)
 
-# 1. 加载已有 RSS 数据（去重用）
-rss_list = []
-if os.path.exists(DATA_FILE):
+# 1. 终极底座：把原仓库 README 里所有活着的、优质的源全部打包死磕在这里
+raw_imported_feeds = [
+  {"name": "知乎每日精选", "url": "https://zhihu.com", "category": "news"},
+  {"name": "阮一峰的网络日志", "url": "https://ruanyifeng.com", "category": "tech"},
+  {"name": "少数派", "url": "https://sspai.com/feed", "category": "news"},
+  {"name": "美团技术团队", "url": "https://meituan.com", "category": "tech"},
+  {"name": "V2EX", "url": "https://v2ex.com", "category": "tech"},
+  {"name": "酷壳 – CoolShell", "url": "http://coolshell.cn", "category": "tech"},
+  {"name": "爱范儿", "url": "https://ifanr.com", "category": "news"},
+  {"name": "知乎热榜", "url": "https://rsshub.app", "category": "news"},
+  {"name": "南方周末-新闻", "url": "https://rsshub.app", "category": "news"},
+  {"name": "机核", "url": "https://gcores.com", "category": "news"},
+  {"name": "热榜 - 煎蛋", "url": "https://rsshub.app", "category": "news"},
+  {"name": "云风的 BLOG", "url": "http://codingnow.com", "category": "blog"},
+  {"name": "知乎日报", "url": "https://rsshub.app", "category": "news"},
+  {"name": "小众软件", "url": "https://appinn.com", "category": "tech"},
+  {"name": "虎嗅网", "url": "https://huxiu.com", "category": "news"},
+  {"name": "36氪", "url": "https://36kr.com", "category": "news"},
+  {"name": "异次元软件世界", "url": "https://iplaysoft.com", "category": "tech"},
+  {"name": "DIYGod", "url": "https://diygod.me", "category": "blog"},
+  {"name": "王垠的博客", "url": "https://rsshub.app", "category": "blog"},
+  {"name": "微博热搜榜", "url": "https://rsshub.app", "category": "news"},
+  {"name": "码农周刊", "url": "https://rsshub.app", "category": "tech"},
+  {"name": "潮流周刊", "url": "https://tw93.fun", "category": "tech"},
+  {"name": "HelloGitHub 月刊", "url": "http://hellogithub.com", "category": "tech"},
+  {"name": "游戏研究社", "url": "https://yystv.cn", "category": "news"},
+  {"name": "Anyway.FM 设计杂谈", "url": "https://anyway.fm", "category": "blog"},
+  {"name": "Anthony Fu", "url": "https://antfu.me", "category": "blog"},
+  {"name": "稚晖君的bilibili动态", "url": "https://rsshub.app", "category": "tech"}
+]
+
+# 2. 读取或合并
+rss_list = raw_imported_feeds
+
+# 给所有源打上英文名和初始在线状态
+for item in rss_list:
+    item["name_en"] = urlparse(item["url"]).netloc
+    item["status"] = "active"
+
+existing_urls = {item['url'].strip().lower() for item in rss_list}
+
+# 3. 体检函数
+def check_existing_link(item):
     try:
-        with open(DATA_FILE, 'r', encoding='utf-8') as f:
-            rss_list = json.load(f)
-            if not isinstance(rss_list, list): rss_list = []
+        res = requests.get(item['url'], headers=HEADERS, timeout=5)
+        item['status'] = 'active' if res.status_code == 200 else 'dead'
     except Exception:
-        rss_list = []
+        item['status'] = 'dead'
+    return item
 
-existing_urls = {item['url'].strip().lower() for item in rss_list if isinstance(item, dict) and 'url' in item}
-
-# 2. 核心功能：顺藤摸瓜 —— 从已有网页中“捕获”新的友情链接网站
+# 4. 自动繁衍种子站
 def harvest_new_homepages(seed_url):
     new_seeds = set()
     try:
-        res = requests.get(seed_url, headers=HEADERS, timeout=8, allow_redirects=True)
+        res = requests.get(seed_url, headers=HEADERS, timeout=5)
         if res.status_code != 200: return new_seeds
         soup = BeautifulSoup(res.text, 'html.parser')
-        
-        # 扫描页面上所有的超级链接 <a> 标签
         for a in soup.find_all('a', href=True):
             href = a['href'].strip()
-            # 策略：抓取属于独立的 http/https 的外部完整网址 (排除当前种子站自身的外链、GitHub 或推特等社交大厂外链)
             if href.startswith('http') and urlparse(seed_url).netloc != urlparse(href).netloc:
-                if not any(domain in href.lower() for domain in ['github.com', 'twitter.com', 'google.com', 'baidu.com', 'apple.com', 'v2ex.com']):
-                    # 格式化为干净的首页路径：例如 https://example.com
+                if not any(d in href.lower() for d in ['github.com', 'twitter.com', 'google.com', 'baidu.com']):
                     parsed = urlparse(href)
-                    clean_homepage = f"{parsed.scheme}://{parsed.netloc}/"
-                    new_seeds.add(clean_homepage)
-    except Exception:
-        pass
+                    new_seeds.add(f"{parsed.scheme}://{parsed.netloc}/")
+    except Exception: pass
     return new_seeds
 
-# 3. 在目标站点中嗅探 RSS
 def discover_rss_from_homepage(homepage_url):
     discovered = []
     try:
-        res = requests.get(homepage_url, headers=HEADERS, timeout=8, allow_redirects=True)
+        res = requests.get(homepage_url, headers=HEADERS, timeout=5)
         if res.status_code != 200: return discovered
         soup = BeautifulSoup(res.text, 'html.parser')
-        
-        # 寻找标准的 link 标签
-        feed_links = soup.find_all('link', rel=re.compile(r'alternate', re.I), type=re.compile(r'(rss|atom|xml)', re.I))
-        for link in feed_links:
-            href = link.get('href')
-            if href: discovered.append(urljoin(homepage_url, href))
-                
-        # 扫描普通 A 标签路径
         for a in soup.find_all('a', href=True):
             href = a['href']
             if any(p in href.lower() for p in ['/feed', '/rss.xml', 'atom.xml', '/rss', '/index.xml']):
                 discovered.append(urljoin(homepage_url, href))
-    except Exception:
-        pass
+    except Exception: pass
     return list(set(discovered))
 
-# 4. 验证 RSS 合法性
 def verify_and_format_rss(rss_url):
-    rss_url_clean = rss_url.strip()
-    if rss_url_clean.lower() in existing_urls: return None
+    if rss_url.strip().lower() in existing_urls: return None
     try:
-        res = requests.get(rss_url_clean, headers=HEADERS, timeout=6)
-        if res.status_code == 200 and ('xml' in res.headers.get('Content-Type', '').lower() or '<rss' in res.text[:300].lower() or '<feed' in res.text[:300].lower()):
-            title_match = re.search(r'<title>(.*?)</title>', res.text)
-            name = title_match.group(1) if title_match else urlparse(rss_url_clean).netloc
-            name = re.sub(r'<!\[CDATA\[(.*?)\]\]>', r'\1', name).strip()
-            
-            existing_urls.add(rss_url_clean.lower())
-            print(f"✨ 发现活体新源: {name} -> {rss_url_clean}")
-            return {"name": name, "name_en": urlparse(rss_url_clean).netloc, "url": rss_url_clean, "category": "tech", "status": "active"}
-    except Exception:
-        pass
+        res = requests.get(rss_url, headers=HEADERS, timeout=5)
+        if res.status_code == 200 and ('xml' in res.headers.get('Content-Type', '').lower() or '<rss' in res.text[:200].lower()):
+            existing_urls.add(rss_url.strip().lower())
+            return {"name": urlparse(rss_url).netloc, "name_en": urlparse(rss_url).netloc, "url": rss_url, "category": "tech", "status": "active"}
+    except Exception: pass
     return None
 
-def check_existing_link(item):
-    if not isinstance(item, dict) or 'url' not in item: return None
-    try:
-        res = requests.get(item['url'], headers=HEADERS, timeout=6)
-        item['status'] = 'active' if res.status_code == 200 else 'dead'
-    except Exception: item['status'] = 'dead'
-    return item
-
 if __name__ == "__main__":
-    print("➡️ 第一步：例行旧数据健康体检...")
-    if rss_list:
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            rss_list = [r for r in executor.map(check_existing_link, rss_list) if r is not None]
+    print("➡️ 开始并发体检刚才导入的全部优质源...")
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        rss_list = [r for r in executor.map(check_existing_link, rss_list) if r is not None]
 
-    # === 【降维打击核心：target_homepages 种子站全自动滚雪球分裂】 ===
-    print("\n➡️ 第二步：雷达种子站正在进行全网“友情链接”无线蔓延挖掘...")
-    
-    # 你的初始母体种子（用来当做挖掘源头的元老级站点）
-    base_seeds = [
-        "https://meituan.com",
-        "https://www.ruanyifeng.com/blog/",
-        "https://hellogithub.com"
-    ]
-    
-    # 自动把母体站里的所有博客外链、友链提取出来，变成一个庞大的自动化线索库！
-    dynamic_target_homepages = set(base_seeds)
+    print("\n➡️ 启动雪球繁殖机制...")
+    base_seeds = ["https://meituan.com", "https://ruanyifeng.com"]
+    dynamic_seeds = set(base_seeds)
     with ThreadPoolExecutor(max_workers=5) as executor:
-        results = executor.map(harvest_new_homepages, base_seeds)
-        for h_set in results:
-            dynamic_target_homepages.update(h_set)
-            
-    print(f"📡 繁衍成功！种子站线索库已由最初的 {len(base_seeds)} 个，全自动扩充为了 {len(dynamic_target_homepages)} 个巡逻基地！")
-    # ===================================================================
+        for h_set in executor.map(harvest_new_homepages, base_seeds):
+            dynamic_seeds.update(h_set)
 
-    print("\n➡️ 第三步：派驻机器人去这数百个新基地疯狂抽洗 RSS 链接...")
-    all_potential_rss = []
-    # 限制遍历前 50 个高权重扩充地址，防止 Actions 运行超时
-    for homepage in list(dynamic_target_homepages)[:50]:
-        all_potential_rss.extend(discover_rss_from_homepage(homepage))
-    
-    new_valid_feeds = []
-    if all_potential_rss:
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            results = executor.map(verify_and_format_rss, all_potential_rss)
-            new_valid_feeds = [r for r in results if r is not None]
-            
-    if new_valid_feeds:
-        rss_list.extend(new_valid_feeds)
-        print(f"🎉 成果丰硕：本次自动化战役追加了 {len(new_valid_feeds)} 个全新的 RSS 订阅卡片！")
-    else:
-        print("暂无新发现。")
+    all_potential = []
+    for hp in list(dynamic_seeds)[:15]:
+        all_potential.extend(discover_rss_from_homepage(hp))
 
-    # 去重清洗并存盘
+    if all_potential:
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            new_feeds = [r for r in executor.map(verify_and_format_rss, all_potential) if r is not None]
+            rss_list.extend(new_feeds)
+
+    # 彻底去重
     unique_list = []
-    seen_urls = set()
+    seen = set()
     for item in rss_list:
-        if isinstance(item, dict) and 'url' in item:
-            u = item['url'].strip().lower()
-            if u not in seen_urls:
-                seen_urls.add(u); unique_list.append(item)
+        u = item['url'].strip().lower()
+        if u not in seen:
+            seen.add(u)
+            unique_list.append(item)
 
     with open(DATA_FILE, 'w', encoding='utf-8') as f:
         json.dump(unique_list, f, ensure_ascii=False, indent=2)
-    print(f"💾 数据库落盘完毕。当前总池规模：{len(unique_list)} 个源。")
+    print(f"💾 导入+体检+繁衍全部结束！当前累计生成源数量：{len(unique_list)}")

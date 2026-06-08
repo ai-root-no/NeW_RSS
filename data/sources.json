@@ -1,37 +1,142 @@
 [
   {
+    "name": "知乎每日精选",
+    "url": "https://zhihu.com",
+    "category": "news",
+    "name_en": "zhihu.com",
+    "status": "active"
+  },
+  {
     "name": "阮一峰的网络日志",
-    "name_en": "Ruan Yi Feng's Blog",
     "url": "https://ruanyifeng.com",
     "category": "tech",
+    "name_en": "ruanyifeng.com",
     "status": "dead"
   },
   {
     "name": "少数派",
-    "name_en": "sspai",
-    "url": "https://sspai.com",
+    "url": "https://sspai.com/feed",
     "category": "news",
+    "name_en": "sspai.com",
     "status": "active"
   },
   {
-    "name": "酷壳",
-    "name_en": "CoolShell",
+    "name": "美团技术团队",
+    "url": "https://meituan.com",
+    "category": "tech",
+    "name_en": "meituan.com",
+    "status": "active"
+  },
+  {
+    "name": "V2EX",
+    "url": "https://v2ex.com",
+    "category": "tech",
+    "name_en": "v2ex.com",
+    "status": "active"
+  },
+  {
+    "name": "酷壳 – CoolShell",
     "url": "http://coolshell.cn",
     "category": "tech",
+    "name_en": "coolshell.cn",
     "status": "active"
   },
   {
-    "name": "少数派",
-    "name_en": "sspai.com",
-    "url": "https://sspai.com/feed",
+    "name": "爱范儿",
+    "url": "https://ifanr.com",
+    "category": "news",
+    "name_en": "ifanr.com",
+    "status": "active"
+  },
+  {
+    "name": "知乎热榜",
+    "url": "https://rsshub.app",
+    "category": "news",
+    "name_en": "rsshub.app",
+    "status": "dead"
+  },
+  {
+    "name": "机核",
+    "url": "https://gcores.com",
+    "category": "news",
+    "name_en": "gcores.com",
+    "status": "active"
+  },
+  {
+    "name": "云风的 BLOG",
+    "url": "http://codingnow.com",
+    "category": "blog",
+    "name_en": "codingnow.com",
+    "status": "active"
+  },
+  {
+    "name": "小众软件",
+    "url": "https://appinn.com",
     "category": "tech",
+    "name_en": "appinn.com",
     "status": "active"
   },
   {
-    "name": "HelloGitHub",
+    "name": "虎嗅网",
+    "url": "https://huxiu.com",
+    "category": "news",
+    "name_en": "huxiu.com",
+    "status": "active"
+  },
+  {
+    "name": "36氪",
+    "url": "https://36kr.com",
+    "category": "news",
+    "name_en": "36kr.com",
+    "status": "active"
+  },
+  {
+    "name": "异次元软件世界",
+    "url": "https://iplaysoft.com",
+    "category": "tech",
+    "name_en": "iplaysoft.com",
+    "status": "active"
+  },
+  {
+    "name": "DIYGod",
+    "url": "https://diygod.me",
+    "category": "blog",
+    "name_en": "diygod.me",
+    "status": "active"
+  },
+  {
+    "name": "潮流周刊",
+    "url": "https://tw93.fun",
+    "category": "tech",
+    "name_en": "tw93.fun",
+    "status": "active"
+  },
+  {
+    "name": "HelloGitHub 月刊",
+    "url": "http://hellogithub.com",
+    "category": "tech",
     "name_en": "hellogithub.com",
-    "url": "https://hellogithub.com/rss",
-    "category": "tech",
+    "status": "active"
+  },
+  {
+    "name": "游戏研究社",
+    "url": "https://yystv.cn",
+    "category": "news",
+    "name_en": "yystv.cn",
+    "status": "dead"
+  },
+  {
+    "name": "Anyway.FM 设计杂谈",
+    "url": "https://anyway.fm",
+    "category": "blog",
+    "name_en": "anyway.fm",
+    "status": "dead"
+  },
+  {
+    "name": "Anthony Fu",
+    "url": "https://antfu.me",
+    "category": "blog",
+    "name_en": "antfu.me",
     "status": "active"
   }
 ]
