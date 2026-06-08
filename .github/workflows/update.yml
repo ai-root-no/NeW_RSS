@@ -32,8 +32,9 @@ jobs:
         git diff-index --quiet HEAD || git commit -m "chore: 定时更新 RSS 状态包"
         git push
 
-    - name: 部署到 GitHub Pages（已修复插件名）
+        - name: 部署到 GitHub Pages
       uses: JamesIves/github-pages-deploy-action@v4
       with:
-        branch: gh-pages # 将网页发布到 gh-pages 分支
-        folder: .        # 发布当前目录下的所有文件
+        branch: gh-pages # 发布到 gh-pages 分支
+        folder: .        # 推送当前整个目录
+        clean: false     # 关键：不要让插件误删或者覆盖其他静态资源
