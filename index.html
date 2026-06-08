@@ -1,1 +1,39 @@
+        // 2. 声明空数组，等待异步加载
+        let rssData = [];
+        let currentLang = 'zh';
+        let currentCategory = 'all';
+
+        // 3. 语言切换逻辑
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            document.documentElement.lang = currentLang;
+            renderUI();
+        }
+
+        // 4. 渲染界面 (保持你之前的 renderUI 代码不变)
+        function renderUI() {
+            // ... 这里是你之前 index.html 里的 renderUI 内部逻辑，无需修改 ...
+        }
+
+        // 5. 分类筛选 (保持不变)
+        function filterCategory(cat) { currentCategory = cat; renderUI(); }
+        // 6. 一键复制 (保持不变)
+        function copyToClipboard(text) { ... }
+        // 7. 导出 OPML (保持不变)
+        function exportOPML() { ... }
+
+        // 修改初始化入口：先读取 JSON 文件，再渲染页面
+        async function init() {
+            try {
+                // 自动读取同目录下的 data/sources.json
+                const response = await fetch('./data/sources.json');
+                rssData = await response.json();
+                renderUI();
+            } catch (error) {
+                console.error("加载 RSS 数据失败:", error);
+            }
+        }
+
+        // 执行初始化
+        init();
 
