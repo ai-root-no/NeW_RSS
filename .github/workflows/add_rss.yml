@@ -1,8 +1,8 @@
 name: Auto Add RSS From Issue
 
 on:
-  issues:
-    types: [opened] # 只要有人在网页上点按钮并提交了 Issue，立刻触发！
+  issue:
+    types: [opened] # 只要有人提交了 Issue，立刻触发
 
 jobs:
   auto-add:
@@ -29,7 +29,6 @@ jobs:
         from urllib.parse import urlparse, urljoin
         from bs4 import BeautifulSoup
 
-        # 1. 提取 Issue 里的原始网址
         raw_url = os.environ['ISSUE_BODY'].strip()
         print(f"正在处理用户提交的网址: {raw_url}")
 
@@ -39,7 +38,6 @@ jobs:
             with open(DATA_FILE, 'r', encoding='utf-8') as f:
                 rss_list = json.load(f)
 
-        # 2. 简易嗅探算法：检查这个网址是不是本来就是 RSS，或者去首页找 RSS
         headers = {'User-Agent': 'Mozilla/5.0'}
         final_rss = raw_url
         name = urlparse(raw_url).netloc
@@ -47,7 +45,6 @@ jobs:
         try:
             res = requests.get(raw_url, headers=headers, timeout=8)
             if res.status_code == 200:
-                # 如果是普通网页，尝试找 feed
                 if 'xml' not in res.headers.get('Content-Type', '').lower():
                     soup = BeautifulSoup(res.text, 'html.parser')
                     for a in soup.find_all('a', href=True):
@@ -55,14 +52,12 @@ jobs:
                             final_rss = urljoin(raw_url, a['href'])
                             break
                 
-                # 重新请求最终 RSS 抓取标题
                 res2 = requests.get(final_rss, headers=headers, timeout=8)
                 title_match = re.search(r'<title>(.*?)</title>', res2.text)
                 if title_match: name = title_match.group(1).strip()
         except Exception as e:
-            print(f"嗅探出错，使用默认数据: {e}")
+            print(f"嗅探出错: {e}")
 
-        # 3. 去重加入
         if not any(item['url'].lower() == final_rss.lower() for item in rss_list):
             rss_list.insert(0, {
                 "name": name,
@@ -85,8 +80,6 @@ jobs:
         git add data/sources.json
         git diff-index --quiet HEAD || git commit -m "chore: 前台网页用户提交新源自动录入"
         git push
-        
-        # 顺手把这个 Issue 关闭掉并打上标签，代表大功告成
         gh issue edit ${{ github.event.issue.number }} --state closed --add-label "auto-added"
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -97,4 +90,3 @@ jobs:
         branch: gh-pages
         folder: .
         clean: false
-
