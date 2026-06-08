@@ -4,64 +4,90 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="page-title">极简优质 RSS 导航</title>
+    <!-- 引入最稳定版 Tailwind CSS 样式 -->
     <script src="https://tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
-                extend: { boxShadow: { 'xs': '0 1px 2px 0 rgba(0, 0, 0, 0.05)' } }
+                extend: {
+                    colors: {
+                        flatBg: '#f4f6f8',
+                        flatCard: '#ffffff',
+                        flatBorder: '#e2e8f0'
+                    }
+                }
             }
         }
     </script>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans min-h-screen pb-12">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen antialiased">
 
-    <!-- 顶部导航 -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <span>🌐</span> <span id="nav-logo">Best RSS List</span>
+    <!-- 顶栏 -->
+    <header class="bg-white border-b border-flatBorder sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-lg font-bold text-slate-900 flex items-center gap-2 tracking-wide">
+                <span>🌐</span> <span id="nav-logo">精选 RSS 导航</span>
             </h1>
-            <div class="flex gap-4">
-                <button onclick="exportOPML()" id="btn-export" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition cursor-pointer">📥 导出 OPML</button>
-                <button onclick="toggleLanguage()" id="btn-lang" class="border border-gray-300 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm font-medium transition cursor-pointer">English</button>
-            </div>
+            <button onclick="toggleLanguage()" id="btn-lang" class="border border-slate-300 hover:bg-slate-100 px-3 py-1 rounded text-xs font-semibold uppercase tracking-wider transition cursor-pointer">
+                English
+            </button>
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto px-4 mt-8">
-        <!-- 介绍区 -->
-        <section class="text-center my-8">
-            <h2 id="main-heading" class="text-3xl font-extrabold text-gray-900 sm:text-4xl">全球优质 RSS 源精选</h2>
-            <p id="main-sub" class="mt-3 max-w-2xl mx-auto text-base text-gray-500">聚合全球极具价值的订阅源，支持一键导入阅读器。</p>
-        </section>
-
-        <!-- 🚀 核心跨越：免维护输入框 -->
-        <section class="max-w-xl mx-auto mb-12 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-            <div class="flex gap-2">
-                <input type="text" id="new-url-input" placeholder="贴入任何博客首页或 RSS 链接..." class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:border-blue-500">
-                <button onclick="addNewSource()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer">✨ 极速添加</button>
+    <!-- 扁平化多栏布局主体：在大屏上限制高度，防止一直拉 -->
+    <main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:h-[calc(100vh-65px)] lg:overflow-hidden">
+        
+        <!-- 左侧分栏：控制台（大屏下保持静止固定，不参与滚动） -->
+        <div class="lg:col-span-4 flex flex-col gap-5 lg:h-full lg:overflow-y-auto pr-0 lg:pr-2">
+            
+            <!-- 介绍区 -->
+            <div class="bg-white border border-flatBorder p-5 rounded-none">
+                <h2 id="main-heading" class="text-xl font-black text-slate-900 tracking-tight">全球优质 RSS 源精选</h2>
+                <p id="main-sub" class="mt-2 text-xs text-slate-500 leading-relaxed">聚合全球极具价值的订阅源，支持一键导入阅读器。</p>
             </div>
-            <p class="text-xs text-gray-400 mt-2 text-center">系统会自动尝试嗅探并提取该站点的标准 RSS 订阅接口</p>
-        </section>
 
-        <!-- 分类过滤器 -->
-        <div class="flex flex-wrap gap-2 justify-center mb-8" id="filter-container"></div>
+            <!-- 免维护输入框 -->
+            <div class="bg-white border border-flatBorder p-5 rounded-none flex flex-col gap-3">
+                <input type="text" id="new-url-input" placeholder="贴入任何博客首页或 RSS 链接..." class="w-full border border-slate-200 px-3 py-2 text-xs bg-slate-50 focus:outline-none focus:border-blue-600 focus:bg-white transition">
+                <button onclick="addNewSource()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 text-xs font-bold transition tracking-wider cursor-pointer text-center uppercase">
+                    ✨ 极速添加
+                </button>
+                <p class="text-[10px] text-slate-400 text-center leading-normal">系统会自动建立 Issue 并触发 Actions 机器人为您深度嗅探格式</p>
+            </div>
 
-        <!-- RSS 列表网格 -->
-        <div class="grid gap-6 sm:grid-cols-2 lg:cols-3" id="rss-grid"></div>
+            <!-- 分类过滤器 -->
+            <div class="bg-white border border-flatBorder p-5 rounded-none">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-3">分类筛选</span>
+                <div class="flex flex-col gap-1.5" id="filter-container"></div>
+            </div>
+
+            <!-- 工具箱 -->
+            <div class="bg-white border border-flatBorder p-5 rounded-none mt-auto">
+                <button onclick="exportOPML()" id="btn-export" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 text-xs font-bold transition tracking-wider cursor-pointer text-center">
+                    📥 导出 OPML 订阅包
+                </button>
+            </div>
+        </div>
+
+        <!-- 右侧分栏：动态卡片网格区域（在大屏下单独独立滚动，视窗永不拉长） -->
+        <div class="lg:col-span-8 lg:h-full lg:overflow-y-auto pb-12 lg:pb-6">
+            <div class="grid gap-4 grid-cols-1 sm:grid-cols-2" id="rss-grid">
+                <!-- 由 JS 动态渲染扁平卡片 -->
+            </div>
+        </div>
+
     </main>
 
     <script>
         const i18n = {
-            zh: { title: "极简优质 RSS 导航", logo: "精选 RSS 导航", heading: "全球优质 RSS 源精选", sub: "聚合全球极具价值的订阅源，支持一键导入阅读器。", exportBtn: "📥 导出选中/全部", langBtn: "English", copied: "已复制！", all: "全部", tech: "💻 技术开发", blog: "💡 独立博客", news: "📰 资讯周刊", statusActive: "🟢 在线", statusDead: "🔴 待测", copyBtn: "复制链接" },
-            en: { title: "Premium RSS Directory", logo: "Best RSS List", heading: "Curated Premium RSS Feeds", sub: "Global high-value subscription feeds, one-click export.", exportBtn: "📥 Export OPML", langBtn: "简体中文", copied: "Copied!", all: "All", tech: "💻 Tech", blog: "💡 Blogs", news: "📰 News", statusActive: "🟢 Active", statusDead: "🔴 Pending", copyBtn: "Copy Link" }
+            zh: { title: "极简优质 RSS 导航", logo: "精选 RSS 导航", heading: "全球优质 RSS 源精选", sub: "聚合全球极具价值的订阅源，支持一键导入阅读器。", exportBtn: "📥 导出选中分类", langBtn: "English", copied: "已复制！", all: "全部全部", tech: "💻 技术开发", blog: "💡 独立博客", news: "📰 资讯周刊", statusActive: "在线", statusDead: "待测", copyBtn: "复制链接" },
+            en: { title: "Premium RSS Directory", logo: "Best RSS List", heading: "Curated Premium RSS Feeds", sub: "Global high-value subscription feeds, one-click export.", exportBtn: "📥 Export Selected OPML", langBtn: "简体中文", copied: "Copied!", all: "All Feeds", tech: "💻 Tech", blog: "💡 Blogs", news: "📰 News", statusActive: "Active", statusDead: "Pending", copyBtn: "Copy Link" }
         };
 
         let rssData = [];
         let currentLang = 'zh';
         let currentCategory = 'all';
 
-               // 🚀 修改后的全自动提交逻辑
         function addNewSource() {
             const input = document.getElementById('new-url-input');
             let url = input.value.trim();
@@ -70,18 +96,14 @@
 
             try {
                 const domain = new URL(url).hostname;
-                
-                // 1. 拼装一个可以直接帮你去提交 GitHub Issue 的特殊链接
-                // 替换下面网址中的 [你的GitHub用户名] 
-                const githubUser = "ai-root-no"; // 👈 如果你的用户名不是这个，请修改它
+                const githubUser = "ai-root-no"; 
                 const repoName = "NeW_RSS";
                 
                 const issueTitle = encodeURIComponent(`[ADD_RSS] ${domain}`);
                 const issueBody = encodeURIComponent(`${url}`);
                 const submitUrl = `https://github.com{githubUser}/${repoName}/issues/new?title=${issueTitle}&body=${issueBody}`;
 
-                // 2. 弹窗提示并引导用户确认
-                if(confirm("✨ 正在为您连接自动化数据库...\n\n点击确认后，系统将自动跳转到 GitHub 页面。您只需直接点击绿色的 'Submit new issue'（提交新议题）按钮，机器人就会立刻帮你录入并刷新网站！")) {
+                if(confirm("✨ 正在为您连接自动化数据库...\n\n点击确认后将跳转到 GitHub 页面。您只需直接点击绿色的 'Submit new issue' 按钮，机器人就会录入并刷新网站！")) {
                     window.open(submitUrl, '_blank');
                     input.value = "";
                 }
@@ -90,50 +112,80 @@
             }
         }
 
-        function toggleLanguage() { currentLang = currentLang === 'zh' ? 'en' : 'zh'; renderUI(); }
+        function toggleLanguage() { 
+            currentLang = currentLang === 'zh' ? 'en' : 'zh'; 
+            renderUI(); 
+        }
 
         function renderUI() {
             const langData = i18n[currentLang];
+            document.title = langData.title;
             document.getElementById('nav-logo').innerText = langData.logo;
             document.getElementById('main-heading').innerText = langData.heading;
             document.getElementById('main-sub').innerText = langData.sub;
             document.getElementById('btn-export').innerText = langData.exportBtn;
             document.getElementById('btn-lang').innerText = langData.langBtn;
 
+            // 扁平化侧边单选栏渲染
             const categories = ['all', 'tech', 'blog', 'news'];
             document.getElementById('filter-container').innerHTML = categories.map(cat => `
-                <button onclick="filterCategory('${cat}')" class="px-4 py-1.5 rounded-full text-sm font-medium transition ${currentCategory === cat ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}">${langData[cat]}</button>
+                <button onclick="filterCategory('${cat}')" class="w-full text-left px-3 py-2 text-xs font-medium transition flex justify-between items-center border ${currentCategory === cat ? 'bg-slate-900 border-slate-900 text-white font-bold' : 'bg-slate-50 border-flatBorder text-slate-600 hover:bg-slate-100'}">
+                    <span>${langData[cat]}</span>
+                    ${currentCategory === cat ? '<span>✓</span>' : ''}
+                </button>
             `).join('');
 
             const filteredData = currentCategory === 'all' ? rssData : rssData.filter(item => item.category === currentCategory);
+            
+            // 渲染扁平卡片流
             document.getElementById('rss-grid').innerHTML = filteredData.map(item => `
-                <div class="bg-white rounded-xl shadow-xs border border-gray-100 p-5 flex flex-col justify-between hover:shadow-md transition">
+                <div class="bg-white border border-flatBorder p-4 flex flex-col justify-between hover:border-slate-400 transition group">
                     <div>
-                        <div class="flex justify-between items-start">
-                            <h3 class="font-bold text-gray-900 text-base break-all pr-2">${currentLang === 'zh' ? item.name : item.name_en}</h3>
-                            <span class="text-xs px-2 py-0.5 rounded-full ${item.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}">${item.status === 'active' ? langData.statusActive : langData.statusDead}</span>
+                        <div class="flex justify-between items-start gap-2">
+                            <h3 class="font-bold text-slate-900 text-sm break-all leading-snug">${currentLang === 'zh' ? item.name : item.name_en}</h3>
+                            <span class="text-[10px] font-bold px-1.5 py-0.5 tracking-wider uppercase shrink-0 ${item.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                ${item.status === 'active' ? langData.statusActive : langData.statusDead}
+                            </span>
                         </div>
-                        <p class="text-xs text-gray-400 font-mono break-all bg-gray-50 p-2 rounded-sm mt-3 border border-gray-100">${item.url}</p>
+                        <p class="text-[11px] text-slate-400 font-mono break-all mt-2 bg-slate-50 p-1.5 border border-slate-100 select-all">${item.url}</p>
                     </div>
-                    <button onclick="copyToClipboard('${item.url}')" class="w-full mt-4 bg-gray-50 hover:bg-blue-50 hover:text-blue-600 text-gray-600 py-1.5 rounded-lg text-xs font-medium transition">📋 ${langData.copyBtn}</button>
+                    <button onclick="copyToClipboard('${item.url}')" class="w-full mt-4 border border-slate-200 hover:border-blue-600 hover:bg-blue-600 hover:text-white text-slate-700 py-1.5 text-xs font-bold transition">
+                        ${langData.copyBtn}
+                    </button>
                 </div>
             `).join('');
         }
 
         function filterCategory(cat) { currentCategory = cat; renderUI(); }
         function copyToClipboard(text) { navigator.clipboard.writeText(text).then(() => alert(i18n[currentLang].copied)); }
-        function exportOPML() { /* 保持之前导出的逻辑 */ }
+
+        function exportOPML() {
+            const filteredData = currentCategory === 'all' ? rssData : rssData.filter(item => item.category === currentCategory);
+            let opmlContent = `<?xml version="1.0" encoding="UTF-8"?>\n<opml version="1.0">\n  <head><title>Exported RSS Feeds</title></head>\n  <body>\n    <outline text="${currentCategory.toUpperCase()}" title="${currentCategory.toUpperCase()}">\n`;
+            filteredData.forEach(item => {
+                const name = currentLang === 'zh' ? item.name : item.name_en;
+                opmlContent += `      <outline text="${name}" title="${name}" type="rss" xmlUrl="${item.url}" htmlUrl="${item.url}"/>\n`;
+            });
+            opmlContent += `    </outline>\n  </body>\n</opml>`;
+            const blob = new Blob([opmlContent], { type: 'text/xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `rss_export_${currentCategory}.opml`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
 
         async function init() {
             try {
                 const response = await fetch('./data/sources.json');
                 rssData = await response.json();
-            } catch (error) {
-                rssData = [{ name: "示例：美团技术团队", name_en: "Meituan", url: "https://meituan.com", category: "tech", status: "active" }];
+        } catch (error) {
+                // 如果找不到 json 文件时的默认本地兜底数据
+                rssData = [
+                    { name: "知乎每日精选", name_en: "Zhihu", url: "zhihu.com", category: "news", status: "active" },
+                    { name: "阮一峰的网络日志", name_en: "RuanYiFeng", url: "ruanyifeng.com", category: "tech", status: "active" },
+                    { name: "少数派", name_en: "sspai", url: "sspai.com", category: "news", status: "active" }
+                          ];
             }
             renderUI();
         }
         init();
-    </script>
-</body>
-</html>
