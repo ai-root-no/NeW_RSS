@@ -19,7 +19,8 @@ jobs:
 
     - name: 安装依赖
       run: |
-        pip install requests
+        pip install requests beautifulsoup4
+
 
     - name: 运行死链检测脚本
       run: python check_rss.py
