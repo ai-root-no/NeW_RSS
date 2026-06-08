@@ -2,8 +2,8 @@ name: Daily RSS Health Check
 
 on:
   schedule:
-    - cron: '0 18 * * *' # 每天北京时间凌晨 2:00 自动运行 (18:00 UTC)
-  workflow_dispatch:     # 允许你在 GitHub 页面上手动点击按钮触发运行
+    - cron: '0 18 * * *' # 每天北京时间凌晨 2:00 自动运行
+  workflow_dispatch:     # 允许手动触发运行
 
 jobs:
   check-and-deploy:
@@ -29,12 +29,11 @@ jobs:
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@://github.com"
         git add data/sources.json
-        # 如果文件没有变化，则不提交，防止报错中断
         git diff-index --quiet HEAD || git commit -m "chore: 定时更新 RSS 状态包"
         git push
 
-    - name: 部署到 GitHub Pages
-      uses: maxam2017/github-pages-deploy-action@v4
+    - name: 部署到 GitHub Pages（已修复插件名）
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
         branch: gh-pages # 将网页发布到 gh-pages 分支
         folder: .        # 发布当前目录下的所有文件
